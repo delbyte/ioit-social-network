@@ -22,7 +22,7 @@ export function EventCard({ event }: { event: EventPost }) {
   const hasPhoto = event.photos && event.photos.length > 0;
 
   return (
-    <article className="flex h-full flex-col gap-4 rounded-xl border bg-card text-card-foreground shadow pt-4 pb-4 px-4 transition-colors hover:border-gray-300">
+    <article className="flex h-full flex-col gap-4 rounded-xl border bg-transparent p-5 transition-colors hover:bg-card">
       {hasPhoto ? (
         <div
           className="min-h-28 rounded-md bg-muted"

@@ -27,7 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <InterestProvider>
             <MainNav />
-            <main className="content-shell">{children}</main>
+            <main className="mx-auto max-w-5xl px-4 py-8 md:px-8 lg:py-12">{children}</main>
           </InterestProvider>
         </AuthProvider>
       </body>

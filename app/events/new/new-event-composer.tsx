@@ -170,7 +170,7 @@ export function NewEventComposer() {
       </div>
 
       <div className="grid md:grid-cols-[1fr_400px] xl:grid-cols-[1fr_500px] gap-6 xl:gap-8 items-start">
-        <div className={`space-y-4 rounded-xl border bg-card p-4 md:p-6 shadow-sm ${mobileView === "preview" ? "hidden md:block" : "block"}`}>
+        <div className={`space-y-6 md:p-2 ${mobileView === "preview" ? "hidden md:block" : "block"}`}>
             <div className="flex items-center gap-4">
               <div className="relative">
                 <button
@@ -263,7 +263,7 @@ export function NewEventComposer() {
           {statusMessage ? <p className="text-sm text-muted-foreground">{statusMessage}</p> : null}
         </div>
 
-        <aside className={`space-y-4 rounded-xl border bg-card p-4 md:p-6 shadow-sm sticky top-20 ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
+        <aside className={`space-y-6 sticky top-20 md:p-2 ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h2>
           <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-primary">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
