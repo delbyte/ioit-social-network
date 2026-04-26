@@ -1,6 +1,9 @@
-import { eventPosts } from "@/lib/events";
 import { DiscoverClient } from "@/app/discover/discover-client";
+import { fetchEvents } from "@/lib/supabase/queries";
 
-export default function DiscoverPage() {
-  return <DiscoverClient events={eventPosts} />;
+export const dynamic = "force-dynamic";
+
+export default async function DiscoverPage() {
+  const events = await fetchEvents();
+  return <DiscoverClient events={events} />;
 }

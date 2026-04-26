@@ -1,6 +1,9 @@
-import { eventPosts } from "@/lib/events";
 import { EventsClient } from "@/app/events/events-client";
+import { fetchEvents } from "@/lib/supabase/queries";
 
-export default function EventsPage() {
-  return <EventsClient events={eventPosts} />;
+export const dynamic = "force-dynamic";
+
+export default async function EventsPage() {
+  const events = await fetchEvents();
+  return <EventsClient events={events} />;
 }

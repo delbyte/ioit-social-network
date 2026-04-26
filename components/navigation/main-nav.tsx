@@ -6,10 +6,10 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
-  { href: "/", label: "Home", shortLabel: "Home" },
-  { href: "/events", label: "My Events", shortLabel: "Events" },
-  { href: "/discover", label: "Discover", shortLabel: "Discover" },
-  { href: "/profile", label: "Profile", shortLabel: "Profile" },
+  { href: "/", label: "Home" },
+  { href: "/events", label: "Events" },
+  { href: "/discover", label: "Discover" },
+  { href: "/profile", label: "Profile" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -32,13 +32,14 @@ export function MainNav() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-4 pt-[max(0.4rem,env(safe-area-inset-top))]">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-2xl border border-[var(--border-soft)] bg-[var(--surface-card)] px-4 py-3 shadow-[var(--shadow-soft)] backdrop-blur-md">
-          <Link href="/" className="brand-mark" aria-label="Open home feed">
+      {/* Desktop top bar */}
+      <header className="top-bar">
+        <div className="top-bar-inner">
+          <Link href="/" className="brand-mark">
             PulseGather
           </Link>
 
-          <nav className="hidden items-center gap-2 md:flex" aria-label="Main">
+          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main">
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -46,7 +47,9 @@ export function MainNav() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={active ? "nav-chip nav-chip-active" : "nav-chip"}
+                  className={
+                    active ? "nav-link nav-link-active" : "nav-link"
+                  }
                 >
                   {item.label}
                 </Link>
@@ -55,17 +58,13 @@ export function MainNav() {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link href="/events/new" className="btn-primary">
-              Create Event
-            </Link>
-
             {!loading && (
               <>
                 {user ? (
                   <button
                     onClick={handleSignOut}
                     className="btn-secondary"
-                    style={{ cursor: "pointer" }}
+                    type="button"
                   >
                     Sign Out
                   </button>
@@ -80,6 +79,7 @@ export function MainNav() {
         </div>
       </header>
 
+      {/* Mobile dock */}
       <nav className="mobile-dock md:hidden" aria-label="Primary">
         {navItems.slice(0, 2).map((item) => {
           const active = isActive(pathname, item.href);
@@ -90,12 +90,16 @@ export function MainNav() {
               aria-current={active ? "page" : undefined}
               className={active ? "dock-link dock-link-active" : "dock-link"}
             >
-              {item.shortLabel}
+              {item.label}
             </Link>
           );
         })}
 
-        <Link href="/events/new" className="dock-create" aria-label="Create a new event">
+        <Link
+          href="/events/new"
+          className="dock-create"
+          aria-label="Create event"
+        >
           +
         </Link>
 
@@ -108,7 +112,7 @@ export function MainNav() {
               aria-current={active ? "page" : undefined}
               className={active ? "dock-link dock-link-active" : "dock-link"}
             >
-              {item.shortLabel}
+              {item.label}
             </Link>
           );
         })}

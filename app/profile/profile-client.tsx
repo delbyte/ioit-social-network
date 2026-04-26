@@ -2,24 +2,41 @@
 
 import { EventCard } from "@/components/events/event-card";
 import { useInterestState } from "@/components/providers/interest-provider";
-import { currentUser, type EventPost } from "@/lib/events";
+import type { EventPost } from "@/lib/events";
 
-export function ProfileClient({ createdEvents }: { createdEvents: EventPost[] }) {
+interface ProfileData {
+  name: string;
+  handle: string;
+  bio: string;
+  avatarUrl: string | null;
+}
+
+export function ProfileClient({
+  profile,
+  createdEvents,
+}: {
+  profile: ProfileData;
+  createdEvents: EventPost[];
+}) {
   const { interestedIds } = useInterestState();
 
   return (
     <section className="space-y-6">
       <header className="profile-hero">
         <div className="avatar-ring" aria-hidden="true">
-          {currentUser.name
+          {profile.name
             .split(" ")
             .map((token) => token[0])
             .join("")}
         </div>
         <div className="space-y-2">
-          <h1 className="page-title">{currentUser.name}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{currentUser.handle}</p>
-          <p className="max-w-2xl text-sm text-[var(--text-body)]">{currentUser.bio}</p>
+          <h1 className="page-title">{profile.name}</h1>
+          <p className="text-sm text-[var(--text-muted)]">{profile.handle}</p>
+          {profile.bio && (
+            <p className="max-w-2xl text-sm text-[var(--text-body)]">
+              {profile.bio}
+            </p>
+          )}
         </div>
       </header>
 

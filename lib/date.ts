@@ -1,8 +1,8 @@
 import type { EventPost } from "@/lib/events";
 
 export function formatEventDateRange(event: EventPost): string {
-  const start = new Date(event.startAt);
-  const end = new Date(event.endAt);
+  const start = new Date(event.start_at);
+  const end = new Date(event.end_at);
 
   const dateFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -17,16 +17,16 @@ export function formatEventDateRange(event: EventPost): string {
   });
 
   return `${dateFormatter.format(start)} · ${timeFormatter.format(
-    start
+    start,
   )} - ${timeFormatter.format(end)}`;
 }
 
-export function getRelativeEventState(event: EventPost, now = Date.now()):
-  | "past"
-  | "ongoing"
-  | "upcoming" {
-  const startMs = new Date(event.startAt).getTime();
-  const endMs = new Date(event.endAt).getTime();
+export function getRelativeEventState(
+  event: EventPost,
+  now = Date.now(),
+): "past" | "ongoing" | "upcoming" {
+  const startMs = new Date(event.start_at).getTime();
+  const endMs = new Date(event.end_at).getTime();
 
   if (endMs < now) {
     return "past";

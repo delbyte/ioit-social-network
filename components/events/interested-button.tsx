@@ -11,15 +11,16 @@ function sleep(ms: number): Promise<void> {
 }
 
 export function InterestedButton({ event }: { event: EventPost }) {
-  const { isInterested, toggleInterested, getCalendarUrl } = useInterestState();
+  const { isInterested, toggleInterested, getCalendarUrl } =
+    useInterestState();
 
   const interested = isInterested(event.id);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const interestTotal = useMemo(
-    () => event.interestCount + (interested ? 1 : 0),
-    [event.interestCount, interested]
+    () => event.interest_count + (interested ? 1 : 0),
+    [event.interest_count, interested],
   );
 
   const calendarUrl = getCalendarUrl(event.id);
@@ -54,8 +55,8 @@ export function InterestedButton({ event }: { event: EventPost }) {
           interested
             ? "btn-primary"
             : hasError
-            ? "btn-error"
-            : "btn-secondary"
+              ? "btn-error"
+              : "btn-secondary"
         }
       >
         {buttonLabel}
@@ -70,7 +71,7 @@ export function InterestedButton({ event }: { event: EventPost }) {
           rel="noreferrer"
           className="calendar-link"
         >
-          Open Google Calendar link
+          Add to Google Calendar
         </a>
       ) : null}
     </div>

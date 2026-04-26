@@ -9,7 +9,7 @@ export interface DiscoverFilters {
 
 export function applyDiscoverFilters(
   events: EventPost[],
-  filters: DiscoverFilters
+  filters: DiscoverFilters,
 ): EventPost[] {
   const withCategoryFilter =
     filters.categories.length === 0
@@ -18,8 +18,8 @@ export function applyDiscoverFilters(
 
   return [...withCategoryFilter].sort((a, b) => {
     const dateDelta =
-      new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
-    const interestDelta = b.interestCount - a.interestCount;
+      new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
+    const interestDelta = b.interest_count - a.interest_count;
 
     if (filters.sort === "date") {
       if (dateDelta !== 0) return dateDelta;

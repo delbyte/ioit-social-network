@@ -1,29 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
+import { Geist } from "next/font/google";
 import { MainNav } from "@/components/navigation/main-nav";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { InterestProvider } from "@/components/providers/interest-provider";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const geist = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "PulseGather",
   description:
-    "Event-only social network with timeline, discover, and one-click interest + calendar deep links.",
+    "Event-only social network — plan, RSVP, and sync to your calendar.",
 };
 
 export default function RootLayout({
@@ -32,10 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${geist.variable} h-full`}>
       <body className="min-h-full">
         <AuthProvider>
           <InterestProvider>
