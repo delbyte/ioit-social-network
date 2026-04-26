@@ -36,7 +36,7 @@ export function MainNav() {
       <header className="top-bar">
         <div className="top-bar-inner">
           <Link href="/" className="brand-mark">
-            PulseGather
+            Mingle
           </Link>
 
           <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main">

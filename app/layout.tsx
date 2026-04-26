@@ -11,7 +11,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "PulseGather",
+  title: "Mingle",
   description:
     "Event-only social network — plan, RSVP, and sync to your calendar.",
 };
