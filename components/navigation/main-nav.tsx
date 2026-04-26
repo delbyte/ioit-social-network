@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/providers/auth-provider";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/", label: "Home", shortLabel: "Home" },
@@ -20,6 +22,13 @@ function isActive(pathname: string, href: string): boolean {
 
 export function MainNav() {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  }
 
   return (
     <>
@@ -45,9 +54,29 @@ export function MainNav() {
             })}
           </nav>
 
-          <Link href="/events/new" className="btn-primary hidden md:inline-flex">
-            Create Event
-          </Link>
+          <div className="hidden items-center gap-2 md:flex">
+            <Link href="/events/new" className="btn-primary">
+              Create Event
+            </Link>
+
+            {!loading && (
+              <>
+                {user ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="btn-secondary"
+                    style={{ cursor: "pointer" }}
+                  >
+                    Sign Out
+                  </button>
+                ) : (
+                  <Link href="/login" className="btn-secondary">
+                    Sign In
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </header>
 

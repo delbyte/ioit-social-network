@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
 import { MainNav } from "@/components/navigation/main-nav";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { InterestProvider } from "@/components/providers/interest-provider";
 import "./globals.css";
 
@@ -36,10 +37,12 @@ export default function RootLayout({
       className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <InterestProvider>
-          <MainNav />
-          <main className="content-shell">{children}</main>
-        </InterestProvider>
+        <AuthProvider>
+          <InterestProvider>
+            <MainNav />
+            <main className="content-shell">{children}</main>
+          </InterestProvider>
+        </AuthProvider>
       </body>
     </html>
   );
