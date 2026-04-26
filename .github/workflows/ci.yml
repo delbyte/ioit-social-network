@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint checks
+        run: pnpm lint
+
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run TypeScript checks
+        run: pnpm typecheck
+
+  vercel-preview:
+    name: Vercel Preview Deployment Check
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - typecheck
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      VERCEL_ORG_ID: team_kOSzMHQmtHcLSnMizEy1rnCG
+      VERCEL_PROJECT_ID: prj_E4CZbLF8z1oB79xzLfp46JiJBzEL
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel project metadata
+        run: pnpm dlx vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build with Vercel
+        run: pnpm dlx vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy preview with Vercel
+        id: deploy
+        run: |
+          deployment_url=$(pnpm dlx vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=${deployment_url}" >> "$GITHUB_OUTPUT"
+
+      - name: Add deployment summary
+        run: |
+          echo "### Preview deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

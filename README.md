@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IOIT Social Network
 
-## Getting Started
+Event-only social network built with Next.js + TypeScript + pnpm.
 
-First, run the development server:
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Quality checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+```
 
-## Learn More
+## Vercel CLI deploy
 
-To learn more about Next.js, take a look at the following resources:
+This repo is linked to Vercel project `delbytes-projects/ioit-social-network`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Preview deploy:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm dlx vercel --target preview
+```
 
-## Deploy on Vercel
+Production deploy:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm dlx vercel --prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## CI workflow
+
+GitHub Actions workflow is in `.github/workflows/ci.yml` and includes:
+
+1. Lint check (`pnpm lint`)
+2. TypeScript check (`pnpm typecheck`)
+3. Vercel preview deployment check (build + deploy preview)
+
+Required repository secret:
+
+1. `VERCEL_TOKEN`
+
+`VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` are already configured in CI for this linked project.
