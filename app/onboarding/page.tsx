@@ -64,7 +64,7 @@ export default function OnboardingPage() {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 py-4">
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           Display Name
           <Input

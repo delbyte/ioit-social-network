@@ -87,7 +87,7 @@ export function ProfileEditClient({
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm text-card-foreground">
+        <div className="space-y-4 md:p-2">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Display Name
             <Input

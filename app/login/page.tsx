@@ -43,7 +43,7 @@ export default function LoginPage() {
       </header>
 
       {status === "sent" ? (
-        <div className="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-3 text-center">
+        <div className="space-y-3 text-center py-6">
           <div className="text-4xl leading-none">
             ✉️
           </div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-6">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Email address
             <input

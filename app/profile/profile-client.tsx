@@ -62,15 +62,15 @@ export function ProfileClient({
       </header>
 
       <section className="grid grid-cols-3 gap-4" aria-label="Profile stats">
-        <article className="rounded-xl border bg-card p-4 text-center shadow-sm">
+        <article className="rounded-lg border bg-transparent p-4 text-center">
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Created</h2>
           <p className="mt-1 text-2xl font-bold tracking-tight">{createdEvents.length}</p>
         </article>
-        <article className="rounded-xl border bg-card p-4 text-center shadow-sm">
+        <article className="rounded-lg border bg-transparent p-4 text-center">
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Interested</h2>
           <p className="mt-1 text-2xl font-bold tracking-tight">{interestedIds.length}</p>
         </article>
-        <article className="rounded-xl border bg-card p-4 text-center shadow-sm">
+        <article className="rounded-lg border bg-transparent p-4 text-center">
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Focus</h2>
           <p className="mt-1 text-lg font-bold tracking-tight">Event-Only</p>
         </article>
