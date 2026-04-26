@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createClient } from "@/lib/supabase/client";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -33,13 +34,13 @@ export function MainNav() {
   return (
     <>
       {/* Desktop top bar */}
-      <header className="top-bar">
-        <div className="top-bar-inner">
-          <Link href="/" className="brand-mark">
+      <header className="fixed inset-x-0 top-0 z-50 border-b bg-background/85 backdrop-blur-md hidden md:block">
+        <div className="flex h-14 items-center justify-between max-w-3xl mx-auto px-4">
+          <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
             Mingle
           </Link>
 
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Main">
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
               return (
@@ -47,9 +48,9 @@ export function MainNav() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={
-                    active ? "nav-link nav-link-active" : "nav-link"
-                  }
+                  className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${
+                    active ? "text-foreground bg-muted/50" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
                 >
                   {item.label}
                 </Link>
@@ -61,15 +62,16 @@ export function MainNav() {
             {!loading && (
               <>
                 {user ? (
-                  <button
+                  <Button
                     onClick={handleSignOut}
-                    className="btn-secondary"
+                    variant="secondary"
+                    size="sm"
                     type="button"
                   >
                     Sign Out
-                  </button>
+                  </Button>
                 ) : (
-                  <Link href="/login" className="btn-secondary">
+                  <Link href="/login" className={buttonVariants({ variant: "secondary", size: "sm" })}>
                     Sign In
                   </Link>
                 )}
@@ -80,7 +82,7 @@ export function MainNav() {
       </header>
 
       {/* Mobile dock */}
-      <nav className="mobile-dock md:hidden" aria-label="Primary">
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 items-center border-t bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] pt-1 px-1 md:hidden" aria-label="Primary">
         {navItems.slice(0, 2).map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -88,7 +90,9 @@ export function MainNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={active ? "dock-link dock-link-active" : "dock-link"}
+              className={`flex flex-col items-center justify-center min-h-[3rem] text-[11px] font-medium rounded-lg transition-colors ${
+                active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {item.label}
             </Link>
@@ -97,7 +101,7 @@ export function MainNav() {
 
         <Link
           href="/events/new"
-          className="dock-create"
+          className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-foreground text-background text-lg font-medium leading-none shadow-sm hover:opacity-90 transition-opacity"
           aria-label="Create event"
         >
           +
@@ -110,7 +114,9 @@ export function MainNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={active ? "dock-link dock-link-active" : "dock-link"}
+              className={`flex flex-col items-center justify-center min-h-[3rem] text-[11px] font-medium rounded-lg transition-colors ${
+                active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {item.label}
             </Link>

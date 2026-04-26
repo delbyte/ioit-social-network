@@ -20,14 +20,17 @@ export function DiscoverClient({ events }: { events: EventPost[] }) {
 
   return (
     <section className="space-y-6">
-      <header className="space-y-3">
-        <h1 className="page-title">Discover Events</h1>
-        <p className="page-subtitle">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Discover Events</h1>
+        <p className="text-sm text-muted-foreground">
           Sort by date, popularity, or a mixed trending mode.
         </p>
       </header>
 
-      <div className="control-panel">
+      <div className="flex flex-col gap-4 mb-8">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          Sort by
+        </label>
         <div className="flex flex-wrap gap-2">
           {[
             ["date", "Date"],
@@ -38,32 +41,39 @@ export function DiscoverClient({ events }: { events: EventPost[] }) {
               key={value}
               type="button"
               onClick={() => setSort(value as DiscoverSort)}
-              className={sort === value ? "chip-active" : "chip-idle"}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${sort === value ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
             >
               {label}
             </button>
           ))}
         </div>
 
-        <label className="text-sm font-medium text-[var(--text-body)]">
-          Category
-          <select
-            className="select-field"
-            value={category}
-            onChange={(event) => setCategory(event.target.value as EventCategory | "all")}
-          >
-            <option value="all">All categories</option>
-            {eventCategoryOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-2">
+          Categories
         </label>
+        <div className="flex overflow-x-auto pb-2 -mx-1 px-1 gap-2 scrollbar-hide">
+          <button
+            type="button"
+            onClick={() => setCategory("all")}
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors shrink-0 ${category === "all" ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+          >
+            All
+          </button>
+          {eventCategoryOptions.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setCategory(item)}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors shrink-0 ${category === item ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="empty-state">
+        <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground p-8 text-center">
           <p>No events match the selected sort and filter right now.</p>
         </div>
       ) : (

@@ -30,19 +30,19 @@ export function EventsClient({ events }: { events: EventPost[] }) {
 
   return (
     <section className="space-y-6">
-      <header className="space-y-3">
-        <h1 className="page-title">Your Events</h1>
-        <p className="page-subtitle">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Your Events</h1>
+        <p className="text-sm text-muted-foreground">
           Events you signed up for with the Interested action.
         </p>
       </header>
 
-      <div className="tab-row" role="tablist" aria-label="Your events tabs">
+      <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground" role="tablist" aria-label="Your events tabs">
         <button
           type="button"
           role="tab"
           aria-selected={activeTab === "upcoming"}
-          className={activeTab === "upcoming" ? "tab-active" : "tab-idle"}
+          className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeTab === "upcoming" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
           onClick={() => setActiveTab("upcoming")}
         >
           Upcoming ({upcomingEvents.length})
@@ -51,7 +51,7 @@ export function EventsClient({ events }: { events: EventPost[] }) {
           type="button"
           role="tab"
           aria-selected={activeTab === "past"}
-          className={activeTab === "past" ? "tab-active" : "tab-idle"}
+          className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeTab === "past" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
           onClick={() => setActiveTab("past")}
         >
           Past ({pastEvents.length})
@@ -59,7 +59,7 @@ export function EventsClient({ events }: { events: EventPost[] }) {
       </div>
 
       {visibleEvents.length === 0 ? (
-        <div className="empty-state">
+        <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-sm text-muted-foreground p-8 text-center">
           <p>
             {activeTab === "upcoming"
               ? "No upcoming signups yet. Tap Interested on an event to join it instantly."

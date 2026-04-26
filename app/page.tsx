@@ -11,32 +11,26 @@ export default async function Home() {
 
   return (
     <section className="space-y-8">
-      <header className="hero-splash">
+      <header className="py-6 md:py-8">
         <div className="space-y-4">
-          <p className="eyebrow">Event-only social feed</p>
-          <h1 className="page-title max-w-2xl">
-            Plan together, RSVP instantly, and drop events straight into Google
-            Calendar.
+          <h1 className="text-3xl font-semibold tracking-tight md:text-5xl max-w-2xl text-foreground">
+            Upcoming Events
           </h1>
-          <p className="page-subtitle max-w-xl">
-            No random posts. Every post is an event with schedule, context, and
-            signup intent.
-          </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/events/new" className="btn-primary">
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/events/new" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
             Create New Event
           </Link>
-          <Link href="/discover" className="btn-secondary">
-            Explore Discover
+          <Link href="/discover" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground">
+            Discover Events
           </Link>
         </div>
       </header>
 
-      <section className="space-y-3">
-        <h2 className="section-title">Upcoming Timeline</h2>
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Upcoming Timeline</h2>
         {upcoming.length === 0 ? (
-          <div className="empty-state">
+          <div className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
             <p>No upcoming events yet. Create one to get started!</p>
           </div>
         ) : (

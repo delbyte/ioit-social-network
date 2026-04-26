@@ -13,7 +13,7 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Mingle",
   description:
-    "Event-only social network — plan, RSVP, and sync to your calendar.",
+    "Event-only social network. Plan, RSVP, and sync to your calendar.",
 };
 
 export default function RootLayout({

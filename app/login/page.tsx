@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,44 +34,35 @@ export default function LoginPage() {
 
   return (
     <section className="mx-auto max-w-md space-y-6">
-      <header className="space-y-2">
-        <h1 className="page-title">Sign in</h1>
-        <p className="page-subtitle">
+      <header className="space-y-2 mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        <p className="text-sm text-muted-foreground">
           Enter your email and we&rsquo;ll send you a magic link to sign in
           instantly &mdash; no password needed.
         </p>
       </header>
 
       {status === "sent" ? (
-        <div className="card-surface space-y-3">
-          <div
-            style={{
-              fontSize: "2.4rem",
-              lineHeight: 1,
-              textAlign: "center",
-            }}
-          >
+        <div className="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-3 text-center">
+          <div className="text-4xl leading-none">
             ✉️
           </div>
-          <h2
-            className="section-title"
-            style={{ textAlign: "center", margin: 0 }}
-          >
+          <h2 className="text-lg font-semibold tracking-tight m-0">
             Check your email
           </h2>
-          <p className="page-subtitle" style={{ textAlign: "center" }}>
-            We sent a magic link to <strong>{email}</strong>. Click the link in
+          <p className="text-sm text-muted-foreground m-0">
+            We sent a magic link to <strong className="font-medium text-foreground">{email}</strong>. Click the link in
             the email to sign in.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="card-surface space-y-4">
-          <label className="field-label">
+        <form onSubmit={handleSubmit} className="rounded-xl border bg-card text-card-foreground shadow p-6 space-y-4">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
             Email address
             <input
               type="email"
               required
-              className="text-field"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -80,25 +72,18 @@ export default function LoginPage() {
           </label>
 
           {status === "error" && (
-            <p
-              style={{
-                color: "var(--danger)",
-                fontSize: "0.85rem",
-                margin: 0,
-              }}
-            >
+            <p className="text-sm font-medium text-destructive m-0">
               {errorMessage}
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
-            className="btn-primary"
             disabled={status === "sending"}
-            style={{ width: "100%" }}
+            className="w-full"
           >
             {status === "sending" ? "Sending…" : "Send Magic Link"}
-          </button>
+          </Button>
         </form>
       )}
     </section>

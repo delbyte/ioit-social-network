@@ -1,11 +1,10 @@
-import { ProfileClient } from "@/app/profile/profile-client";
 import { createClient } from "@/lib/supabase/server";
-import { fetchEventsByHost } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
+import { ProfileEditClient } from "@/app/profile/edit/profile-edit-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProfilePage() {
+export default async function ProfileEditPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,18 +20,15 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
-  const createdEvents = await fetchEventsByHost(user.id);
-
   return (
-    <ProfileClient
-      profile={{
+    <ProfileEditClient
+      initialData={{
         name: profile?.display_name || user.email?.split("@")[0] || "User",
-        handle: profile?.handle || `@${user.email?.split("@")[0] || "user"}`,
+        handle: profile?.handle || "",
         bio: profile?.bio || "",
         about: profile?.about || "",
         avatarUrl: profile?.avatar_url || null,
       }}
-      createdEvents={createdEvents}
     />
   );
 }

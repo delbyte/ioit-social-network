@@ -24,22 +24,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
+    let mounted = true;
+
+    async function checkUserAndProfile(sessionUser: User | null) {
+      if (!sessionUser) {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (mounted) setUser(sessionUser);
+
+      // Check profile constraints
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("handle, display_name")
+        .eq("id", sessionUser.id)
+        .single();
+
+      if (!mounted) return;
+
+      const isOnboarding = window.location.pathname.startsWith("/onboarding");
+      const needsOnboarding = !profile?.handle || !profile?.display_name?.trim();
+
+      if (needsOnboarding && !isOnboarding) {
+        window.location.href = "/onboarding";
+        return; // loading remains true so we don't flash content before redirect
+      }
+
+      if (!needsOnboarding && isOnboarding) {
+        window.location.href = "/";
+        return;
+      }
+
+      setLoading(false);
+    }
 
     // Get initial session
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
+      checkUserAndProfile(user);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      // Re-check on sign in/out
+      checkUserAndProfile(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (

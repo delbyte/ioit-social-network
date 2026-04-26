@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import type { EventPost } from "@/lib/events";
 import { useInterestState } from "@/components/providers/interest-provider";
 
+import { Button } from "@/components/ui/button";
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -47,21 +49,15 @@ export function InterestedButton({ event }: { event: EventPost }) {
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <button
+      <Button
         type="button"
         onClick={handleClick}
         disabled={isLoading}
-        className={
-          interested
-            ? "btn-primary"
-            : hasError
-              ? "btn-error"
-              : "btn-secondary"
-        }
+        variant={interested ? "default" : hasError ? "destructive" : "outline"}
       >
         {buttonLabel}
-      </button>
-      <div className="text-xs text-[var(--text-muted)]">
+      </Button>
+      <div className="text-xs text-muted-foreground">
         {interestTotal} people interested
       </div>
       {interested && calendarUrl ? (
@@ -69,7 +65,7 @@ export function InterestedButton({ event }: { event: EventPost }) {
           href={calendarUrl}
           target="_blank"
           rel="noreferrer"
-          className="calendar-link"
+          className="text-xs font-medium text-primary transition-opacity hover:opacity-70"
         >
           Add to Google Calendar
         </a>

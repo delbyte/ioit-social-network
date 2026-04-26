@@ -14,6 +14,7 @@ export interface EventPost {
   title: string;
   excerpt: string;
   content: string;
+  emoji?: string;
   photos: string[];
   start_at: string;
   end_at: string;
