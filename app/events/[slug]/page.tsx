@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin } from "@phosphor-icons/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -77,7 +76,9 @@ export default async function EventDetailPage({
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="inline-flex items-center gap-2">
-              <MapPin size={16} />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Location
+              </span>
               <span>{event.location || "Location to be announced"}</span>
             </div>
             <Link href={profileHref} className="inline-flex items-center gap-2">
