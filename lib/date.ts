@@ -1,8 +1,9 @@
 import type { EventPost } from "@/lib/events";
 
+const DEFAULT_EVENT_DURATION_MINUTES = 60;
+
 export function formatEventDateRange(event: EventPost): string {
   const start = new Date(event.start_at);
-  const end = new Date(event.end_at);
 
   const dateFormatter = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
@@ -16,9 +17,7 @@ export function formatEventDateRange(event: EventPost): string {
     minute: "2-digit",
   });
 
-  return `${dateFormatter.format(start)} · ${timeFormatter.format(
-    start,
-  )} - ${timeFormatter.format(end)}`;
+  return `${dateFormatter.format(start)} · ${timeFormatter.format(start)}`;
 }
 
 export function getRelativeEventState(
@@ -26,7 +25,7 @@ export function getRelativeEventState(
   now = Date.now(),
 ): "past" | "ongoing" | "upcoming" {
   const startMs = new Date(event.start_at).getTime();
-  const endMs = new Date(event.end_at).getTime();
+  const endMs = startMs + DEFAULT_EVENT_DURATION_MINUTES * 60 * 1000;
 
   if (endMs < now) {
     return "past";

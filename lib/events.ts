@@ -17,11 +17,14 @@ export interface EventPost {
   emoji?: string;
   photos: string[];
   start_at: string;
-  end_at: string;
   location: string;
   category: EventCategory;
   host_id: string;
   host_name: string;
+  host_handle?: string | null;
+  host_avatar_url?: string | null;
+  host_bio?: string | null;
+  host_about?: string | null;
   interest_count: number;
   created_at: string;
 }
@@ -38,7 +41,7 @@ export const eventCategoryOptions: EventCategory[] = [
 ];
 
 export function isEventPast(event: EventPost, now = Date.now()): boolean {
-  return new Date(event.end_at).getTime() < now;
+  return new Date(event.start_at).getTime() < now;
 }
 
 export function sortEventsByDate(events: EventPost[]): EventPost[] {

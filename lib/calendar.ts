@@ -1,10 +1,17 @@
 import type { EventPost } from "@/lib/events";
 
+const DEFAULT_EVENT_DURATION_MINUTES = 60;
+
 function toGoogleDate(dateString: string): string {
   return new Date(dateString)
     .toISOString()
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/, "Z");
+}
+
+function addMinutes(dateString: string, minutes: number): string {
+  const base = new Date(dateString).getTime();
+  return new Date(base + minutes * 60 * 1000).toISOString();
 }
 
 export function buildGoogleCalendarUrl(event: EventPost): string {
@@ -16,7 +23,9 @@ export function buildGoogleCalendarUrl(event: EventPost): string {
   url.searchParams.set("text", event.title);
   url.searchParams.set(
     "dates",
-    `${toGoogleDate(event.start_at)}/${toGoogleDate(event.end_at)}`,
+    `${toGoogleDate(event.start_at)}/${toGoogleDate(
+      addMinutes(event.start_at, DEFAULT_EVENT_DURATION_MINUTES),
+    )}`,
   );
   url.searchParams.set("details", details.slice(0, 3000));
   url.searchParams.set("location", event.location);

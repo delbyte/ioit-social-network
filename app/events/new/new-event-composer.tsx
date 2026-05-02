@@ -1,17 +1,19 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   CalendarBlank,
+  Clock,
   Image as ImageIcon,
   MapPin,
-  Sparkle,
 } from "@phosphor-icons/react";
+import { useSearchParams } from "next/navigation";
 import EmojiPicker from "emoji-picker-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -21,13 +23,16 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { TabItem, Tabs, TabsList } from "@/components/ui/tabs";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Textarea } from "@/components/ui/textarea";
+import { readDrafts, removeDraft, upsertDraft, type EventDraft } from "@/lib/drafts";
 import { createClient } from "@/lib/supabase/client";
 import type { EventCategory } from "@/lib/events";
 import { eventCategoryOptions } from "@/lib/events";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const DEFAULT_EMOJI = "\u{1F4DD}";
+const DRAFT_SAVE_DELAY_MS = 600;
 
 type MobileView = "edit" | "preview";
 
@@ -39,16 +44,17 @@ export function NewEventComposer() {
   const [content, setContent] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState<EventCategory>("Community");
-  const [eventStart, setEventStart] = useState("");
-  const [eventEnd, setEventEnd] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [eventTime, setEventTime] = useState("");
   const [mobileView, setMobileView] = useState<MobileView>("edit");
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const hasScheduleError =
-    eventStart !== "" && eventEnd !== "" && new Date(eventEnd) <= new Date(eventStart);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const searchParams = useSearchParams();
+  const draftParam = searchParams.get("draft");
 
   const canSubmit =
     title.trim().length >= 5 &&
@@ -57,9 +63,8 @@ export function NewEventComposer() {
     content.trim().length >= 20 &&
     content.trim().length <= 5000 &&
     location.trim().length >= 2 &&
-    eventStart !== "" &&
-    eventEnd !== "" &&
-    !hasScheduleError;
+    eventDate !== "" &&
+    eventTime !== "";
 
   const imageHint = useMemo(
     () =>
@@ -68,6 +73,104 @@ export function NewEventComposer() {
         : "Optional image only. JPG, PNG, or WEBP. Maximum 2 MB. No videos.",
     [imageError],
   );
+
+  const hasDraftContent = useMemo(
+    () =>
+      [title, excerpt, content, location, eventDate, eventTime].some(
+        (value) => value.trim() !== "",
+      ),
+    [content, eventDate, eventTime, excerpt, location, title],
+  );
+
+  const previewSchedule = useMemo(() => {
+    if (!eventDate || !eventTime) return "";
+    const value = new Date(`${eventDate}T${eventTime}`);
+    if (Number.isNaN(value.getTime())) return "";
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(value);
+  }, [eventDate, eventTime]);
+
+  function createDraftId() {
+    return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  useEffect(() => {
+    const drafts = readDrafts();
+    const resolvedDraft = draftParam
+      ? drafts.find((draft) => draft.id === draftParam)
+      : drafts[0];
+
+    if (!resolvedDraft) {
+      setDraftLoaded(true);
+      return;
+    }
+
+    setDraftId(resolvedDraft.id);
+    setEmoji(resolvedDraft.emoji || DEFAULT_EMOJI);
+    setTitle(resolvedDraft.title);
+    setExcerpt(resolvedDraft.excerpt);
+    setContent(resolvedDraft.content);
+    setLocation(resolvedDraft.location);
+    setCategory(resolvedDraft.category);
+    setEventDate(resolvedDraft.eventDate);
+    setEventTime(resolvedDraft.eventTime);
+    setDraftLoaded(true);
+  }, [draftParam]);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    if (!hasDraftContent) {
+      if (draftId) {
+        removeDraft(draftId);
+        setDraftId(null);
+      }
+      return;
+    }
+
+    const handle = window.setTimeout(() => {
+      const id = draftId ?? createDraftId();
+      const now = new Date().toISOString();
+      const draft: EventDraft = {
+        id,
+        title,
+        excerpt,
+        content,
+        location,
+        category,
+        emoji,
+        eventDate,
+        eventTime,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      if (!draftId) {
+        setDraftId(id);
+      }
+
+      upsertDraft(draft);
+    }, DRAFT_SAVE_DELAY_MS);
+
+    return () => window.clearTimeout(handle);
+  }, [
+    category,
+    content,
+    draftId,
+    draftLoaded,
+    emoji,
+    eventDate,
+    eventTime,
+    excerpt,
+    hasDraftContent,
+    location,
+    title,
+  ]);
 
   function onImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -104,7 +207,7 @@ export function NewEventComposer() {
     }
 
     setIsSubmitting(true);
-    setStatusMessage("Creating event...");
+    setStatusMessage("Publishing event...");
 
     const supabase = createClient();
     const {
@@ -152,20 +255,29 @@ export function NewEventComposer() {
         .trim()
         .slice(0, 180);
 
+    const startAt = new Date(`${eventDate}T${eventTime}`);
+    if (Number.isNaN(startAt.getTime())) {
+      setStatusMessage("Please choose a valid event date and time.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const slugBase = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+
+    const slug = `${slugBase || "event"}-${Math.random()
+      .toString(36)
+      .substring(2, 6)}`;
+
     const { error: insertError } = await supabase.from("events").insert({
       title: title.trim(),
-      slug:
-        title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)+/g, "") +
-        "-" +
-        Math.random().toString(36).substring(2, 6),
+      slug,
       excerpt: cleanExcerpt,
       content: content.trim(),
       emoji,
-      start_at: new Date(eventStart).toISOString(),
-      end_at: new Date(eventEnd).toISOString(),
+      start_at: startAt.toISOString(),
       location: location.trim(),
       category,
       photos: photoUrl ? [photoUrl] : [],
@@ -178,6 +290,11 @@ export function NewEventComposer() {
       return;
     }
 
+    if (draftId) {
+      removeDraft(draftId);
+      setDraftId(null);
+    }
+
     window.location.href = "/events";
   }
 
@@ -186,13 +303,9 @@ export function NewEventComposer() {
       <header className="flex flex-col justify-between gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:flex-row md:items-end">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Create Event</h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-            Put the essential details in one calm place.
+          <p className="text-sm leading-6 text-muted-foreground">
+            Share the full plan, then publish it to the timeline.
           </p>
-        </div>
-        <div className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
-          <Sparkle size={14} />
-          Draft mode
         </div>
       </header>
 
@@ -291,7 +404,7 @@ export function NewEventComposer() {
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <div className="flex items-center justify-between">
-              <span>Short description</span>
+              <span>Short description / Tagline</span>
               <span className={`text-xs ${excerpt.length > 180 ? "text-destructive" : "text-muted-foreground"}`}>
                 {excerpt.length} / 180
               </span>
@@ -306,7 +419,7 @@ export function NewEventComposer() {
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <div className="flex items-center justify-between">
-              <span>Markdown content</span>
+              <span>Full Description</span>
               <span className={`text-xs ${content.length > 5000 ? "text-destructive" : "text-muted-foreground"}`}>
                 {content.length} / 5000
               </span>
@@ -321,38 +434,28 @@ export function NewEventComposer() {
             />
           </label>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-sm font-medium">
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarBlank size={16} />
-                Start
-              </span>
-              <Input
-                type="datetime-local"
-                value={eventStart}
-                onChange={(event) => setEventStart(event.target.value)}
-                required
-              />
-            </label>
-            <label className="flex flex-col gap-1.5 text-sm font-medium">
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarBlank size={16} />
-                End
-              </span>
-              <Input
-                type="datetime-local"
-                value={eventEnd}
-                onChange={(event) => setEventEnd(event.target.value)}
-                required
-              />
-            </label>
+          <div className="rounded-lg border border-border/70 bg-muted/30 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-foreground">Schedule</h3>
+              <span className="text-xs text-muted-foreground">Local time</span>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarBlank size={16} />
+                  Event date
+                </span>
+                <DatePicker value={eventDate} onChange={setEventDate} />
+              </label>
+              <label className="flex flex-col gap-1.5 text-sm font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock size={16} />
+                  Event time
+                </span>
+                <TimePicker value={eventTime} onChange={setEventTime} />
+              </label>
+            </div>
           </div>
-
-          {hasScheduleError ? (
-            <p className="text-sm font-medium text-destructive">
-              End time must be later than start time.
-            </p>
-          ) : null}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <span className="inline-flex items-center gap-1.5">
@@ -373,7 +476,7 @@ export function NewEventComposer() {
               loading={isSubmitting}
               className="w-full sm:w-auto"
             >
-              Create Event
+              Publish Event
             </Button>
           </div>
         </form>
@@ -392,6 +495,11 @@ export function NewEventComposer() {
             <p className="mt-1 text-sm text-muted-foreground">
               {location || "Location to be announced"} - {category}
             </p>
+            {previewSchedule ? (
+              <p className="mt-2 text-sm font-medium text-foreground/80">
+                {previewSchedule}
+              </p>
+            ) : null}
           </div>
           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-foreground">
             {content.trim() ? (
