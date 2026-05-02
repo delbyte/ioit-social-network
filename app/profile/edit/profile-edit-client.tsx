@@ -78,16 +78,16 @@ export function ProfileEditClient({
   }
 
   return (
-    <section className="mx-auto max-w-xl space-y-6 pt-6">
+    <section className="mx-auto max-w-xl space-y-6 rounded-lg border border-border/80 bg-card p-6 shadow-sm">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Edit Profile</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Edit Profile</h1>
+        <p className="text-sm leading-6 text-muted-foreground">
           Update your public profile details.
         </p>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-4 md:p-2">
+        <div className="space-y-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Display Name
             <Input
@@ -146,7 +146,7 @@ export function ProfileEditClient({
         <div className="flex justify-end gap-3">
           <Button
             type="button"
-            variant="outline"
+            variant="tertiary"
             onClick={() => (window.location.href = "/profile")}
             disabled={status === "submitting"}
           >
@@ -157,8 +157,9 @@ export function ProfileEditClient({
             disabled={
               status === "submitting" || !handle.trim() || !displayName.trim()
             }
+            loading={status === "submitting"}
           >
-            {status === "submitting" ? "Saving..." : "Save Changes"}
+            Save Changes
           </Button>
         </div>
       </form>

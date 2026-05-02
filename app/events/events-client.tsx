@@ -3,14 +3,17 @@
 import { useMemo, useState } from "react";
 import { EventCard } from "@/components/events/event-card";
 import { useInterestState } from "@/components/providers/interest-provider";
+import { TabItem, Tabs, TabsList } from "@/components/ui/tabs";
 import type { EventPost } from "@/lib/events";
 import { isEventPast, sortEventsByDate } from "@/lib/events";
+import { useIcons } from "@/lib/icon-context";
 
 type EventsTab = "upcoming" | "past";
 
 export function EventsClient({ events }: { events: EventPost[] }) {
   const { interestedIds } = useInterestState();
   const [activeTab, setActiveTab] = useState<EventsTab>("upcoming");
+  const icons = useIcons();
 
   const interestedEvents = useMemo(() => {
     const ids = new Set(interestedIds);
@@ -29,37 +32,28 @@ export function EventsClient({ events }: { events: EventPost[] }) {
   const visibleEvents = activeTab === "upcoming" ? upcomingEvents : pastEvents;
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Your Events</h1>
-        <p className="text-sm text-muted-foreground">
-          Events you signed up for with the Interested action.
-        </p>
+    <section className="space-y-8">
+      <header className="flex flex-col justify-between gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:flex-row md:items-end">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Your Events</h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            Your saved plan for what is next.
+          </p>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {interestedEvents.length} saved
+        </div>
       </header>
 
-      <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground" role="tablist" aria-label="Your events tabs">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "upcoming"}
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeTab === "upcoming" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
-          onClick={() => setActiveTab("upcoming")}
-        >
-          Upcoming ({upcomingEvents.length})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "past"}
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${activeTab === "past" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
-          onClick={() => setActiveTab("past")}
-        >
-          Past ({pastEvents.length})
-        </button>
-      </div>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventsTab)}>
+        <TabsList aria-label="Your events tabs">
+          <TabItem value="upcoming" label={`Upcoming (${upcomingEvents.length})`} icon={icons.clock} />
+          <TabItem value="past" label={`Past (${pastEvents.length})`} icon={icons.check} />
+        </TabsList>
+      </Tabs>
 
       {visibleEvents.length === 0 ? (
-        <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-sm text-muted-foreground p-8 text-center">
+        <div className="flex min-h-[220px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           <p>
             {activeTab === "upcoming"
               ? "No upcoming signups yet. Tap Interested on an event to join it instantly."
@@ -67,7 +61,7 @@ export function EventsClient({ events }: { events: EventPost[] }) {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleEvents.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

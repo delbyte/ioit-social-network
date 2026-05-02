@@ -1,140 +1,260 @@
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
-import type { ComponentProps } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  createContext,
+  useContext,
+  forwardRef,
+  type ReactNode,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+} from "react";
+import type { IconComponent } from "@/lib/icon-context";
 import { cn } from "@/lib/utils";
+import { fontWeights } from "@/lib/font-weight";
+import { useShape } from "@/lib/shape-context";
 
-function InputGroup({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="input-group"
-      role="group"
-      className={cn(
-        "border-input dark:bg-input/30 has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40 has-disabled:bg-input/50 dark:has-disabled:bg-input/80 group/input-group relative flex h-8 w-full min-w-0 items-center rounded-lg border bg-white transition-colors outline-none in-data-[slot=combobox-content]:focus-within:border-inherit in-data-[slot=combobox-content]:focus-within:ring-0 has-disabled:opacity-50 has-[[data-slot=input-group-control]:focus-visible]:ring-[3px] has-[[data-slot][aria-invalid=true]]:ring-[3px] has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>textarea]:h-auto has-[>[data-align=block-end]]:[&>input]:pt-3 has-[>[data-align=block-start]]:[&>input]:pb-3 has-[>[data-align=inline-end]]:[&>input]:pr-1.5 has-[>[data-align=inline-start]]:[&>input]:pl-1.5",
-        className,
-      )}
-      {...props}
-    />
-  );
+interface InputGroupContextValue {
+  registerItem: (index: number, element: HTMLLabelElement | null) => void;
+  activeIndex: number | null;
 }
 
-const inputGroupAddonVariants = cva(
-  "text-muted-foreground h-auto gap-2 py-1.5 text-sm font-medium group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-4 flex cursor-text items-center justify-center select-none",
-  {
-    variants: {
-      align: {
-        "inline-start": "pl-2 has-[>button]:ml-[-0.3rem] has-[>kbd]:ml-[-0.15rem] order-first",
-        "inline-end": "pr-2 has-[>button]:mr-[-0.3rem] has-[>kbd]:mr-[-0.15rem] order-last",
-        "block-start":
-          "px-2.5 pt-2 group-has-[>input]/input-group:pt-2 [.border-b]:pb-2 order-first w-full justify-start",
-        "block-end":
-          "px-2.5 pb-2 group-has-[>input]/input-group:pb-2 [.border-t]:pt-2 order-last w-full justify-start",
+const InputGroupContext = createContext<InputGroupContextValue | null>(null);
+
+function useInputGroup() {
+  const ctx = useContext(InputGroupContext);
+  if (!ctx)
+    throw new Error("useInputGroup must be used within an InputGroup");
+  return ctx;
+}
+
+interface InputGroupProps extends HTMLAttributes<HTMLDivElement> {
+  children: ReactNode;
+}
+
+const InputGroup = forwardRef<HTMLDivElement, InputGroupProps>(
+  ({ children, className, ...props }, ref) => {
+    const itemsRef = useRef(new Map<number, HTMLLabelElement>());
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+    const registerItem = useCallback(
+      (index: number, element: HTMLLabelElement | null) => {
+        if (element) {
+          itemsRef.current.set(index, element);
+        } else {
+          itemsRef.current.delete(index);
+        }
       },
-    },
-    defaultVariants: { align: "inline-start" },
-  },
+      []
+    );
+
+    const handleMouseMove = useCallback((e: React.MouseEvent) => {
+      const mouseY = e.clientY;
+
+      let closestIndex: number | null = null;
+      let closestDistance = Infinity;
+
+      itemsRef.current.forEach((element, index) => {
+        const rect = element.getBoundingClientRect();
+        const itemCenterY = rect.top + rect.height / 2;
+        const distance = Math.abs(mouseY - itemCenterY);
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      setActiveIndex(closestIndex);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+      setActiveIndex(null);
+    }, []);
+
+    return (
+      <InputGroupContext.Provider
+        value={{ registerItem, activeIndex }}
+      >
+        <div
+          ref={ref}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className={cn("flex flex-col gap-3 w-72 max-w-full", className)}
+          {...props}
+        >
+          {children}
+        </div>
+      </InputGroupContext.Provider>
+    );
+  }
 );
 
-function InputGroupAddon({
-  className,
-  align = "inline-start",
-  ...props
-}: ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
-  return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
-    <div
-      role="group"
-      data-slot="input-group-addon"
-      data-align={align}
-      className={cn(inputGroupAddonVariants({ align }), className)}
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) {
-          return;
-        }
-        e.currentTarget.parentElement?.querySelector("input")?.focus();
-      }}
-      {...props}
-    />
-  );
+InputGroup.displayName = "InputGroup";
+
+interface InputFieldProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "index"> {
+  label: string;
+  placeholder?: string;
+  icon?: IconComponent;
+  index: number;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
-const inputGroupButtonVariants = cva("gap-2 text-sm shadow-none flex items-center", {
-  variants: {
-    size: {
-      xs: "h-6 gap-1 rounded-[calc(var(--radius)-3px)] px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
-      sm: "",
-      "icon-xs": "size-6 rounded-[calc(var(--radius)-3px)] p-0 has-[>svg]:p-0",
-      "icon-sm": "size-8 p-0 has-[>svg]:p-0",
+const InputField = forwardRef<HTMLLabelElement, InputFieldProps>(
+  (
+    {
+      label,
+      placeholder,
+      icon: Icon,
+      index,
+      value,
+      onChange,
+      error,
+      disabled,
+      className,
+      ...props
     },
-  },
-  defaultVariants: { size: "xs" },
-});
+    ref
+  ) => {
+    const internalRef = useRef<HTMLLabelElement>(null);
+    const { registerItem, activeIndex } = useInputGroup();
+    const [isFocused, setIsFocused] = useState(false);
+    const shape = useShape();
 
-function InputGroupButton({
-  className,
-  type = "button",
-  variant = "ghost",
-  size = "xs",
-  ...props
-}: Omit<ComponentProps<typeof Button>, "size" | "type"> &
-  VariantProps<typeof inputGroupButtonVariants> & { type?: "button" | "submit" | "reset" }) {
-  return (
-    <Button
-      type={type}
-      data-size={size}
-      variant={variant}
-      className={cn(inputGroupButtonVariants({ size }), className)}
-      {...props}
-    />
-  );
-}
+    useEffect(() => {
+      registerItem(index, internalRef.current);
+      return () => registerItem(index, null);
+    }, [index, registerItem]);
 
-function InputGroupText({ className, ...props }: ComponentProps<"span">) {
-  return (
-    <span
-      className={cn(
-        "text-muted-foreground flex items-center gap-2 text-sm [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+    const isActive = activeIndex === index;
+    const labelActive = isActive || isFocused;
 
-function InputGroupInput({ className, ...props }: ComponentProps<"input">) {
-  return (
-    <Input
-      data-slot="input-group-control"
-      className={cn(
-        "flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+    const errorId = error ? `input-error-${index}` : undefined;
 
-function InputGroupTextarea({ className, ...props }: ComponentProps<"textarea">) {
-  return (
-    <Textarea
-      data-slot="input-group-control"
-      className={cn(
-        "flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+    const handleFocus = () => {
+      setIsFocused(true);
+    };
 
-export {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupText,
-  InputGroupInput,
-  InputGroupTextarea,
-};
+    const handleBlur = () => {
+      setIsFocused(false);
+    };
+
+    // Input container classes
+    let bgClass: string;
+    let ringClass: string;
+
+    if (disabled) {
+      bgClass = "bg-transparent";
+      ringClass = "ring-border";
+    } else if (error) {
+      bgClass = isFocused ? "bg-card" : isActive ? "bg-destructive/10" : "bg-transparent";
+      ringClass = isFocused || isActive ? "ring-destructive/50" : "ring-transparent";
+    } else if (isFocused) {
+      bgClass = "bg-card";
+      ringClass = "ring-border";
+    } else if (isActive) {
+      bgClass = "bg-muted/50";
+      ringClass = "ring-border";
+    } else {
+      bgClass = "bg-transparent";
+      ringClass = "ring-transparent";
+    }
+
+    return (
+      <label
+        ref={(node) => {
+          (internalRef as React.MutableRefObject<HTMLLabelElement | null>).current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) (ref as React.MutableRefObject<HTMLLabelElement | null>).current = node;
+        }}
+        className={cn(
+          "flex flex-col gap-1 cursor-text",
+          disabled && "opacity-50 pointer-events-none",
+          className
+        )}
+      >
+        {/* Label */}
+        <span className="inline-grid text-[13px] pl-3">
+          <span
+            className="col-start-1 row-start-1 invisible"
+            style={{ fontVariationSettings: fontWeights.semibold }}
+            aria-hidden="true"
+          >
+            {label}
+          </span>
+          <span
+            className={cn(
+              "col-start-1 row-start-1",
+              error ? "text-destructive" : "text-muted-foreground"
+            )}
+            style={{
+              fontVariationSettings: fontWeights.normal,
+            }}
+          >
+            {label}
+          </span>
+        </span>
+
+        {/* Input container */}
+        <div
+          className={cn(
+            `flex items-center gap-2 ${shape.input} px-3 py-2 ring-1 transition-all duration-80`,
+            bgClass,
+            ringClass
+          )}
+        >
+          {Icon && (
+            <Icon
+              size={16}
+              strokeWidth={labelActive ? 2 : 1.5}
+              className={cn(
+                "shrink-0 transition-[color,stroke-width] duration-80",
+                labelActive
+                  ? "text-foreground"
+                  : "text-muted-foreground"
+              )}
+            />
+          )}
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+            disabled={disabled}
+            aria-invalid={!!error || undefined}
+            aria-describedby={errorId}
+            className="w-full bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground outline-none font-[inherit]"
+            style={{ fontVariationSettings: fontWeights.normal }}
+            {...props}
+          />
+        </div>
+
+        {/* Error message */}
+        {error && (
+          <span
+            id={errorId}
+            className="text-[12px] text-destructive pl-3"
+            style={{ fontVariationSettings: fontWeights.medium }}
+          >
+            {error}
+          </span>
+        )}
+      </label>
+    );
+  }
+);
+
+InputField.displayName = "InputField";
+
+export { InputGroup, InputField };
+export default InputGroup;

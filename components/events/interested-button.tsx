@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CalendarPlus, Heart } from "@phosphor-icons/react";
 import type { EventPost } from "@/lib/events";
 import { useInterestState } from "@/components/providers/interest-provider";
 
@@ -27,7 +28,7 @@ export function InterestedButton({ event }: { event: EventPost }) {
 
   const calendarUrl = getCalendarUrl(event.id);
 
-  const buttonLabel = isLoading ? "Saving..." : "Interested";
+  const buttonLabel = interested ? "Interested" : "I'm interested";
 
   async function handleClick() {
     if (isLoading) {
@@ -52,9 +53,14 @@ export function InterestedButton({ event }: { event: EventPost }) {
       <Button
         type="button"
         onClick={handleClick}
+        loading={isLoading}
         disabled={isLoading}
-        variant={interested ? "default" : hasError ? "destructive" : "outline"}
+        variant={interested ? "primary" : "tertiary"}
+        className={`[&>span]:inline-flex [&>span]:items-center [&>span]:gap-1 ${
+          hasError ? "border-destructive/30 text-destructive" : ""
+        }`}
       >
+        <Heart size={15} weight={interested ? "fill" : "regular"} />
         {buttonLabel}
       </Button>
       <div className="text-xs text-muted-foreground">
@@ -65,8 +71,9 @@ export function InterestedButton({ event }: { event: EventPost }) {
           href={calendarUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-xs font-medium text-primary transition-opacity hover:opacity-70"
+          className="inline-flex items-center gap-1 text-xs font-medium text-foreground transition-opacity hover:opacity-70"
         >
+          <CalendarPlus size={14} />
           Add to Google Calendar
         </a>
       ) : null}

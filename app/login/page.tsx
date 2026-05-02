@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { EnvelopeSimple, PaperPlaneTilt } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,8 +13,8 @@ export default function LoginPage() {
   );
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setStatus("sending");
     setErrorMessage("");
 
@@ -33,46 +35,49 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="mx-auto max-w-md space-y-6">
-      <header className="space-y-2 mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground">
-          Enter your email and we&rsquo;ll send you a magic link to sign in
-          instantly &mdash; no password needed.
-        </p>
+    <section className="mx-auto max-w-md space-y-6 rounded-lg border border-border/80 bg-card p-6 shadow-sm">
+      <header className="space-y-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <EnvelopeSimple size={20} />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Sign in</h1>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Enter your email and we&rsquo;ll send you a magic link to sign in instantly. No password needed.
+          </p>
+        </div>
       </header>
 
       {status === "sent" ? (
-        <div className="space-y-3 text-center py-6">
-          <div className="text-4xl leading-none">
-            ✉️
+        <div className="space-y-3 py-6 text-center">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+            <EnvelopeSimple size={24} />
           </div>
-          <h2 className="text-lg font-semibold tracking-tight m-0">
+          <h2 className="m-0 text-lg font-semibold tracking-tight text-foreground">
             Check your email
           </h2>
-          <p className="text-sm text-muted-foreground m-0">
+          <p className="m-0 text-sm leading-6 text-muted-foreground">
             We sent a magic link to <strong className="font-medium text-foreground">{email}</strong>. Click the link in
             the email to sign in.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 py-6">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Email address
-            <input
+            <Input
               type="email"
               required
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               disabled={status === "sending"}
               autoFocus
             />
           </label>
 
           {status === "error" && (
-            <p className="text-sm font-medium text-destructive m-0">
+            <p className="m-0 text-sm font-medium text-destructive">
               {errorMessage}
             </p>
           )}
@@ -80,9 +85,11 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={status === "sending"}
-            className="w-full"
+            loading={status === "sending"}
+            className="w-full [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1"
           >
-            {status === "sending" ? "Sending…" : "Send Magic Link"}
+            <PaperPlaneTilt size={15} />
+            Send Magic Link
           </Button>
         </form>
       )}

@@ -44,7 +44,7 @@ export function ErrorState({
   const errorAction =
     action ||
     (onRetry && (
-      <Button onClick={onRetry} variant="outline" size="sm">
+      <Button onClick={onRetry} variant="tertiary" size="sm">
         <RefreshCcw />
         <span>Retry</span>
       </Button>

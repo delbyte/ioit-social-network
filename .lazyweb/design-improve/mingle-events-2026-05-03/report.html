@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mingle Events UI Improve</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f6f8fb;
+        color: #07111f;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px 24px;
+      }
+      section {
+        margin-top: 28px;
+      }
+      img {
+        width: 100%;
+        border: 1px solid #d8e0ea;
+        border-radius: 8px;
+        background: white;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      @media (min-width: 760px) {
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      li {
+        margin: 8px 0;
+      }
+      code {
+        background: #eaf0f7;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Mingle Events UI Improve</h1>
+      <p>Lazyweb-backed design pass captured on 2026-05-03.</p>
+
+      <section>
+        <h2>Current Screens</h2>
+        <div class="grid">
+          <img src="current-discover-desktop.png" alt="Current Mingle discover desktop screen" />
+          <img src="current-new-event-desktop.png" alt="Current Mingle create event desktop screen" />
+          <img src="current-discover-mobile.png" alt="Current Mingle discover mobile screen" />
+        </div>
+      </section>
+
+      <section>
+        <h2>References</h2>
+        <div class="grid">
+          <img src="references/github-events-filters.png" alt="GitHub event discovery filters reference" />
+          <img src="references/partiful-create-event.png" alt="Partiful create event reference" />
+          <img src="references/fever-mobile-discovery.png" alt="Fever mobile event discovery reference" />
+        </div>
+      </section>
+
+      <section>
+        <h2>Implemented</h2>
+        <ul>
+          <li>Fluid Functionalism controls for buttons, tabs, select, badges, tooltip, and input groups.</li>
+          <li>Native <code>datetime-local</code> scheduling inputs instead of custom calendar UI.</li>
+          <li>Cleaner event-card layout with stable media, metadata, category icons, and safer share behavior.</li>
+          <li>Composer empty state fixed so placeholders, counters, and live preview agree.</li>
+          <li>Desktop/mobile navigation spacing cleaned up and Next 16 proxy/config warnings removed.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

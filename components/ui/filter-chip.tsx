@@ -2,7 +2,7 @@
 
 import { PlusIcon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -29,10 +29,10 @@ export function FilterChip({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             className={cn(
+              buttonVariants({ variant: "tertiary", size: "sm" }),
               "text-foreground/70 border-dashed",
               isActive &&
                 "border-primary/30 bg-primary/2.5 text-foreground hover:bg-primary/10 border-solid",
@@ -42,16 +42,24 @@ export function FilterChip({
               <>
                 <Icon className="size-3.5" />
                 <span>{value}</span>
-                <button
-                  type="button"
+                <span
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
                     onClear();
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onClear();
+                    }
+                  }}
                   className="hover:bg-muted -mr-1 ml-0.5 rounded p-0.5"
                 >
                   <XIcon className="size-3" />
-                </button>
+                </span>
               </>
             ) : (
               <>
@@ -59,7 +67,7 @@ export function FilterChip({
                 <span>{label}</span>
               </>
             )}
-          </Button>
+          </button>
         }
       />
       <PopoverContent className="w-72 p-0" align="start">

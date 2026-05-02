@@ -48,7 +48,6 @@ function BreadcrumbLink({ className, render, ...props }: useRender.ComponentProp
 function BreadcrumbPage({ className, ...props }: ComponentProps<"span">) {
   return (
     <span
-      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="link"
       data-slot="breadcrumb-page"
       aria-disabled="true"

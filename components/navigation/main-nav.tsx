@@ -2,15 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  CalendarBlank,
+  Compass,
+  House,
+  Plus,
+  SignOut,
+  UserCircle,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/events", label: "Events" },
-  { href: "/discover", label: "Discover" },
-  { href: "/profile", label: "Profile" },
+  { href: "/", label: "Home", icon: House },
+  { href: "/events", label: "Events", icon: CalendarBlank },
+  { href: "/discover", label: "Discover", icon: Compass },
+  { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -33,25 +41,29 @@ export function MainNav() {
 
   return (
     <>
-      {/* Desktop top bar */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b bg-background/85 backdrop-blur-md hidden md:block">
-        <div className="flex h-14 items-center justify-between max-w-3xl mx-auto px-4">
-          <Link href="/" className="text-sm font-semibold tracking-tight text-foreground">
-            Mingle
+      <header className="sticky inset-x-0 top-0 z-50 hidden border-b border-border/70 bg-background/90 backdrop-blur-md md:block">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
+              M
+            </span>
+            <span>Mingle</span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${
-                    active ? "text-foreground bg-muted/50" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className={`flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-medium transition-colors ${
+                    active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
+                  <Icon size={16} weight={active ? "regular" : "light"} />
                   {item.label}
                 </Link>
               );
@@ -64,10 +76,12 @@ export function MainNav() {
                 {user ? (
                   <Button
                     onClick={handleSignOut}
-                    variant="secondary"
+                    variant="tertiary"
                     size="sm"
                     type="button"
+                    className="[&>span]:inline-flex [&>span]:items-center [&>span]:gap-1"
                   >
+                    <SignOut size={14} />
                     Sign Out
                   </Button>
                 ) : (
@@ -81,19 +95,20 @@ export function MainNav() {
         </div>
       </header>
 
-      {/* Mobile dock */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 items-center border-t bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] pt-1 px-1 md:hidden" aria-label="Primary">
+      <nav className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 items-center border-t border-border/70 bg-background/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-2 shadow-[0_-8px_28px_rgba(15,23,42,0.08)] backdrop-blur-md md:hidden" aria-label="Primary">
         {navItems.slice(0, 2).map((item) => {
           const active = isActive(pathname, item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center justify-center min-h-[3rem] text-[11px] font-medium rounded-lg transition-colors ${
-                active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${
+                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
               }`}
             >
+              <Icon size={19} weight={active ? "regular" : "light"} />
               {item.label}
             </Link>
           );
@@ -101,23 +116,25 @@ export function MainNav() {
 
         <Link
           href="/events/new"
-          className="flex items-center justify-center w-10 h-10 mx-auto rounded-full bg-foreground text-background text-lg font-medium leading-none shadow-sm hover:opacity-90 transition-opacity"
+          className="mx-auto flex size-11 items-center justify-center rounded-xl bg-foreground text-background shadow-sm transition-opacity hover:opacity-90"
           aria-label="Create event"
         >
-          +
+          <Plus size={21} weight="bold" />
         </Link>
 
         {navItems.slice(2).map((item) => {
           const active = isActive(pathname, item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex flex-col items-center justify-center min-h-[3rem] text-[11px] font-medium rounded-lg transition-colors ${
-                active ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${
+                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
               }`}
             >
+              <Icon size={19} weight={active ? "regular" : "light"} />
               {item.label}
             </Link>
           );

@@ -20,5 +20,8 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": { "@ai-elements": "https://ai-sdk.dev/elements/api/registry/{name}.json" }
+  "registries": {
+    "@ai-elements": "https://ai-sdk.dev/elements/api/registry/{name}.json",
+    "@fluid": "https://www.fluidfunctionalism.com/r/{name}.json"
+  }
 }

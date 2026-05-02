@@ -1,31 +1,51 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  CalendarBlank,
+  Image as ImageIcon,
+  MapPin,
+  Sparkle,
+} from "@phosphor-icons/react";
+import EmojiPicker from "emoji-picker-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import EmojiPicker from "emoji-picker-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { TabItem, Tabs, TabsList } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-
 import { createClient } from "@/lib/supabase/client";
+import type { EventCategory } from "@/lib/events";
+import { eventCategoryOptions } from "@/lib/events";
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const DEFAULT_EMOJI = "\u{1F4DD}";
 
 type MobileView = "edit" | "preview";
 
 export function NewEventComposer() {
-  const [emoji, setEmoji] = useState("📝");
+  const [emoji, setEmoji] = useState(DEFAULT_EMOJI);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("## Event Overview\n\nWhat should people know?");
+  const [excerpt, setExcerpt] = useState("");
+  const [content, setContent] = useState("");
+  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState<EventCategory>("Community");
   const [eventStart, setEventStart] = useState("");
   const [eventEnd, setEventEnd] = useState("");
   const [mobileView, setMobileView] = useState<MobileView>("edit");
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasScheduleError =
     eventStart !== "" && eventEnd !== "" && new Date(eventEnd) <= new Date(eventStart);
@@ -33,8 +53,12 @@ export function NewEventComposer() {
   const canSubmit =
     title.trim().length >= 5 &&
     title.trim().length <= 100 &&
+    excerpt.trim().length <= 180 &&
     content.trim().length >= 20 &&
     content.trim().length <= 5000 &&
+    location.trim().length >= 2 &&
+    eventStart !== "" &&
+    eventEnd !== "" &&
     !hasScheduleError;
 
   const imageHint = useMemo(
@@ -42,7 +66,7 @@ export function NewEventComposer() {
       imageError
         ? imageError
         : "Optional image only. JPG, PNG, or WEBP. Maximum 2 MB. No videos.",
-    [imageError]
+    [imageError],
   );
 
   function onImageChange(event: ChangeEvent<HTMLInputElement>) {
@@ -54,8 +78,7 @@ export function NewEventComposer() {
       return;
     }
 
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
+    if (!file.type.startsWith("image/")) {
       setImageError("Only image uploads are allowed.");
       setImageFile(null);
       event.target.value = "";
@@ -73,11 +96,14 @@ export function NewEventComposer() {
     setImageFile(file);
   }
 
-  async function onSubmit() {
-    if (!canSubmit) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!canSubmit || isSubmitting) {
       return;
     }
 
+    setIsSubmitting(true);
     setStatusMessage("Creating event...");
 
     const supabase = createClient();
@@ -87,16 +113,18 @@ export function NewEventComposer() {
 
     if (!user) {
       setStatusMessage("You must be logged in to create an event.");
+      setIsSubmitting(false);
       return;
     }
 
     let photoUrl = "";
 
     if (imageFile) {
+      setStatusMessage("Uploading image...");
       const fileExt = imageFile.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("event-photos")
         .upload(fileName, imageFile, {
           cacheControl: "3600",
@@ -105,6 +133,7 @@ export function NewEventComposer() {
 
       if (uploadError) {
         setStatusMessage(`Upload failed: ${uploadError.message}`);
+        setIsSubmitting(false);
         return;
       }
 
@@ -115,8 +144,16 @@ export function NewEventComposer() {
       photoUrl = publicUrlData.publicUrl;
     }
 
+    const cleanExcerpt =
+      excerpt.trim() ||
+      content
+        .replace(/[#*_>`[\]()]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 180);
+
     const { error: insertError } = await supabase.from("events").insert({
-      title,
+      title: title.trim(),
       slug:
         title
           .toLowerCase()
@@ -124,16 +161,20 @@ export function NewEventComposer() {
           .replace(/(^-|-$)+/g, "") +
         "-" +
         Math.random().toString(36).substring(2, 6),
-      content,
+      excerpt: cleanExcerpt,
+      content: content.trim(),
       emoji,
       start_at: new Date(eventStart).toISOString(),
       end_at: new Date(eventEnd).toISOString(),
+      location: location.trim(),
+      category,
       photos: photoUrl ? [photoUrl] : [],
       host_id: user.id,
     });
 
     if (insertError) {
       setStatusMessage(`Event creation failed: ${insertError.message}`);
+      setIsSubmitting(false);
       return;
     }
 
@@ -141,72 +182,127 @@ export function NewEventComposer() {
   }
 
   return (
-    <section className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Create Event</h1>
-        <p className="text-sm text-muted-foreground">
-          Event-only composer with markdown, scheduling, and strict media limits.
-        </p>
+    <section className="space-y-8">
+      <header className="flex flex-col justify-between gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:flex-row md:items-end">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Create Event</h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            Put the essential details in one calm place.
+          </p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-lg bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
+          <Sparkle size={14} />
+          Draft mode
+        </div>
       </header>
 
-      {/* Mobile Toggle */}
-      <div className="md:hidden flex p-1 mb-4 rounded-md bg-muted">
-        <button
-          className={`flex-1 py-1.5 text-sm font-medium rounded-sm transition-all ${
-            mobileView === "edit" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-          }`}
-          onClick={() => setMobileView("edit")}
-        >
-          Edit
-        </button>
-        <button
-          className={`flex-1 py-1.5 text-sm font-medium rounded-sm transition-all ${
-            mobileView === "preview" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-          }`}
-          onClick={() => setMobileView("preview")}
-        >
-          Preview
-        </button>
+      <div className="md:hidden">
+        <Tabs value={mobileView} onValueChange={(value) => setMobileView(value as MobileView)}>
+          <TabsList className="w-full">
+            <TabItem value="edit" label="Edit" />
+            <TabItem value="preview" label="Preview" />
+          </TabsList>
+        </Tabs>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_400px] xl:grid-cols-[1fr_500px] gap-6 xl:gap-8 items-start">
-        <div className={`space-y-6 md:p-2 ${mobileView === "preview" ? "hidden md:block" : "block"}`}>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <button
-                  type="button"
-                  title="Pick an emotional icon"
-                  className="flex h-14 w-14 items-center justify-center rounded-md border text-3xl hover:bg-muted/50 transition-colors"
-                  onClick={() => setShowEmojiPicker((prev) => !prev)}
-                >
-                  {emoji}
-                </button>
-                {showEmojiPicker && (
-                  <div className="absolute top-16 left-0 z-50 shadow-xl">
-                    <EmojiPicker
-                      onEmojiClick={(e) => {
-                        setEmoji(e.emoji);
-                        setShowEmojiPicker(false);
-                      }}
-                    />
-                  </div>
-                )}
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <form
+          onSubmit={onSubmit}
+          className={`space-y-6 rounded-lg border border-border/80 bg-card p-5 shadow-sm ${mobileView === "preview" ? "hidden md:block" : "block"}`}
+        >
+          <div className="flex items-start gap-4">
+            <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+              <PopoverTrigger
+                render={
+                  <button
+                    type="button"
+                    title="Pick an event emoji"
+                    className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-3xl transition-colors hover:bg-muted"
+                  >
+                    {emoji}
+                  </button>
+                }
+              />
+              <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                <EmojiPicker
+                  width={320}
+                  onEmojiClick={(entry) => {
+                    setEmoji(entry.emoji);
+                    setShowEmojiPicker(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium">
+              <div className="flex items-center justify-between">
+                <span>Event title</span>
+                <span className={`text-xs ${title.length > 100 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {title.length} / 100
+                </span>
               </div>
-              <div className="flex-1 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span>Event title</span>
-                  <span className={`text-xs ${title.length > 100 ? "text-destructive" : "text-muted-foreground"}`}>
-                    {title.length} / 100
-                  </span>
-                </div>
+              <Input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Team Offsite: Product + Design"
+                maxLength={100}
+                required
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-1.5 text-sm font-medium">
+              Category
+              <Select
+                value={category}
+                onValueChange={(value) => setCategory(value as EventCategory)}
+                name="category"
+                required
+              >
+                <SelectTrigger className="w-full" placeholder="Choose category" />
+                <SelectContent>
+                  {eventCategoryOptions.map((item, index) => (
+                    <SelectItem key={item} index={index} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+
+            <label className="flex flex-col gap-1.5 text-sm font-medium">
+              Location
+              <div className="relative">
+                <MapPin
+                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={16}
+                />
                 <Input
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Team Offsite: Product + Design"
-                  maxLength={100}
+                  value={location}
+                  onChange={(event) => setLocation(event.target.value)}
+                  placeholder="Innovation Lab, Block C"
+                  className="pl-8"
+                  required
                 />
               </div>
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            <div className="flex items-center justify-between">
+              <span>Short description</span>
+              <span className={`text-xs ${excerpt.length > 180 ? "text-destructive" : "text-muted-foreground"}`}>
+                {excerpt.length} / 180
+              </span>
             </div>
+            <Input
+              value={excerpt}
+              onChange={(event) => setExcerpt(event.target.value)}
+              placeholder="A crisp one-line summary for event cards"
+              maxLength={180}
+            />
+          </label>
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <div className="flex items-center justify-between">
@@ -218,26 +314,36 @@ export function NewEventComposer() {
             <Textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
+              placeholder={"## Event Overview\n\nWhat should people know?"}
               rows={12}
               maxLength={5000}
+              required
             />
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1.5 text-sm font-medium">
-              Start
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarBlank size={16} />
+                Start
+              </span>
               <Input
                 type="datetime-local"
                 value={eventStart}
                 onChange={(event) => setEventStart(event.target.value)}
+                required
               />
             </label>
             <label className="flex flex-col gap-1.5 text-sm font-medium">
-              End
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarBlank size={16} />
+                End
+              </span>
               <Input
                 type="datetime-local"
                 value={eventEnd}
                 onChange={(event) => setEventEnd(event.target.value)}
+                required
               />
             </label>
           </div>
@@ -249,24 +355,52 @@ export function NewEventComposer() {
           ) : null}
 
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            Optional image
+            <span className="inline-flex items-center gap-1.5">
+              <ImageIcon size={16} />
+              Optional image
+            </span>
             <Input type="file" accept="image/*" onChange={onImageChange} />
           </label>
-          <p className="text-xs text-muted-foreground">{imageHint}</p>
+          <p className={`text-xs ${imageError ? "text-destructive" : "text-muted-foreground"}`}>
+            {imageFile && !imageError ? `${imageFile.name} ready to upload.` : imageHint}
+          </p>
 
-          <div className="pt-2">
-            <Button disabled={!canSubmit} onClick={onSubmit} className="w-full sm:w-auto">
-              Save Draft
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            {statusMessage ? <p className="text-sm text-muted-foreground">{statusMessage}</p> : <span />}
+            <Button
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              loading={isSubmitting}
+              className="w-full sm:w-auto"
+            >
+              Create Event
             </Button>
           </div>
+        </form>
 
-          {statusMessage ? <p className="text-sm text-muted-foreground">{statusMessage}</p> : null}
-        </div>
-
-        <aside className={`space-y-6 sticky top-20 md:p-2 ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h2>
-          <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-primary">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <aside className={`sticky top-24 space-y-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h2>
+            <span className="text-2xl leading-none" aria-hidden="true">
+              {emoji}
+            </span>
+          </div>
+          <div>
+            <p className="text-lg font-semibold leading-tight text-foreground">
+              {title || "Untitled event"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {location || "Location to be announced"} - {category}
+            </p>
+          </div>
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-a:text-foreground">
+            {content.trim() ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Add an event overview to preview it here.
+              </p>
+            )}
           </div>
         </aside>
       </div>

@@ -1,94 +1,141 @@
 "use client";
 
+import { useState } from "react";
 import type { EventPost } from "@/lib/events";
 import { formatEventDateRange } from "@/lib/date";
 import { InterestedButton } from "@/components/events/interested-button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tooltip } from "@/components/ui/tooltip";
 
-import { Confetti, ChalkboardTeacher, Basketball, Globe, MusicNotes, ForkKnife, Tag } from "@phosphor-icons/react";
+import {
+  Basketball,
+  Briefcase,
+  Code,
+  Handshake,
+  Leaf,
+  MapPin,
+  Palette,
+  ShareNetwork,
+  Tag,
+  UsersThree,
+  Waveform,
+} from "@phosphor-icons/react";
 
 function getCategoryIcon(category: string) {
   switch (category) {
-    case "Party": return <Confetti weight="fill" className="mr-1 h-3.5 w-3.5 text-pink-500" />;
-    case "Workshop": return <ChalkboardTeacher weight="fill" className="mr-1 h-3.5 w-3.5 text-blue-500" />;
-    case "Sports": return <Basketball weight="fill" className="mr-1 h-3.5 w-3.5 text-orange-500" />;
-    case "Online": return <Globe weight="fill" className="mr-1 h-3.5 w-3.5 text-indigo-500" />;
-    case "Music": return <MusicNotes weight="fill" className="mr-1 h-3.5 w-3.5 text-violet-500" />;
-    case "Food": return <ForkKnife weight="fill" className="mr-1 h-3.5 w-3.5 text-amber-500" />;
-    default: return <Tag weight="fill" className="mr-1 h-3.5 w-3.5 text-muted-foreground" />;
+    case "Technology":
+      return <Code size={14} weight="regular" />;
+    case "Business":
+      return <Briefcase size={14} weight="regular" />;
+    case "Wellness":
+      return <Waveform size={14} weight="regular" />;
+    case "Networking":
+      return <Handshake size={14} weight="regular" />;
+    case "Arts":
+      return <Palette size={14} weight="regular" />;
+    case "Environmental":
+      return <Leaf size={14} weight="regular" />;
+    case "Sports":
+      return <Basketball size={14} weight="regular" />;
+    case "Community":
+      return <UsersThree size={14} weight="regular" />;
+    default:
+      return <Tag size={14} weight="regular" />;
   }
 }
 
 export function EventCard({ event }: { event: EventPost }) {
   const hasPhoto = event.photos && event.photos.length > 0;
+  const [shareState, setShareState] = useState<"idle" | "copied" | "error">("idle");
+
+  async function handleShare() {
+    const shareUrl = `${window.location.origin}/discover`;
+    const shareText = `${event.title} on Mingle\n${shareUrl}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: event.title, text: event.excerpt, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        setShareState("copied");
+        window.setTimeout(() => setShareState("idle"), 1800);
+      }
+    } catch {
+      setShareState("error");
+      window.setTimeout(() => setShareState("idle"), 1800);
+    }
+  }
 
   return (
-    <article className="flex h-full flex-col gap-4 rounded-xl border bg-transparent p-5 transition-colors hover:bg-card">
-      {hasPhoto ? (
+    <article className="group flex h-full min-h-[360px] flex-col overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-md">
+      <div className="relative aspect-[16/9] bg-muted">
+        {hasPhoto ? (
         <div
-          className="min-h-28 rounded-md bg-muted"
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-[1.02]"
           style={{
             backgroundImage: `url(${event.photos[0]})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
           }}
           aria-hidden="true"
         />
-      ) : null}
-
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-          {getCategoryIcon(event.category)}
-          {event.category}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          {event.location}
-        </span>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.16),transparent_34%),radial-gradient(circle_at_80%_35%,rgba(249,115,22,0.14),transparent_28%),linear-gradient(135deg,#ffffff,#eef2f7)]">
+            <span className="text-5xl" aria-hidden="true">
+              {event.emoji || "M"}
+            </span>
+          </div>
+        )}
+        <div className="absolute left-3 top-3">
+          <Badge color="green" variant="dot" size="sm" className="bg-card/90 backdrop-blur">
+            {getCategoryIcon(event.category)}
+            {event.category}
+          </Badge>
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="text-xl font-semibold leading-tight text-foreground flex items-baseline gap-2">
-          {event.emoji && <span className="text-2xl">{event.emoji}</span>}
-          <span>{event.title}</span>
-        </h3>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {event.excerpt}
-        </p>
-      </div>
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            {event.emoji && <span className="mt-0.5 text-2xl leading-none">{event.emoji}</span>}
+            <h3 className="line-clamp-2 text-lg font-semibold leading-tight tracking-tight text-foreground">
+              {event.title}
+            </h3>
+          </div>
+          <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
+            {event.excerpt || event.content}
+          </p>
+        </div>
 
-      <div className="space-y-1 text-sm text-muted-foreground">
-        <p>{formatEventDateRange(event)}</p>
-        <p>Hosted by {event.host_name}</p>
-      </div>
+        <div className="mt-auto space-y-2 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">{formatEventDateRange(event)}</p>
+          <p className="flex items-center gap-1.5">
+            <MapPin size={15} />
+            <span className="truncate">{event.location || "Location to be announced"}</span>
+          </p>
+          <p className="truncate">Hosted by {event.host_name}</p>
+        </div>
 
-      <div className="mt-auto border-t pt-4 flex items-center justify-between">
-        <InterestedButton event={event} />
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigator.clipboard.writeText(`Check out ${event.title} on Mingle! ${window.location.origin}`);
-            alert("Share text copied to clipboard!");
-          }}
-          className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted/50 transition-colors"
-          title="Share the event"
-          aria-label="Share Event"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" x2="12" y1="2" y2="15" />
-          </svg>
-        </button>
+        <div className="flex items-end justify-between gap-3 border-t border-border/70 pt-4">
+          <InterestedButton event={event} />
+          <div className="flex flex-col items-end gap-1">
+            <Tooltip content="Share event">
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                onClick={handleShare}
+                aria-label="Share event"
+              >
+                <ShareNetwork size={18} weight="regular" />
+              </Button>
+            </Tooltip>
+            {shareState !== "idle" ? (
+              <span className={`text-[11px] ${shareState === "copied" ? "text-foreground" : "text-destructive"}`}>
+                {shareState === "copied" ? "Copied" : "Try again"}
+              </span>
+            ) : null}
+          </div>
+        </div>
       </div>
     </article>
   );
