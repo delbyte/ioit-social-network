@@ -14,21 +14,22 @@ export const dynamic = "force-dynamic";
 export default async function EventDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const event = await fetchEventBySlug(params.slug);
+  const { slug } = await params;
+  const event = await fetchEventBySlug(slug);
 
   if (!event) {
     notFound();
   }
 
   const profileHref = event.host_handle
-    ? `/profile/${event.host_handle}`
+    ? `/profile/${encodeURIComponent(event.host_handle.replace(/^@+/, ""))}`
     : `/profile/${event.host_id}`;
   const hostDescription =
     event.host_about ||
     event.host_bio ||
-    (event.host_handle ? `@${event.host_handle}` : "Event host");
+    (event.host_handle ? `@${event.host_handle.replace(/^@+/, "")}` : "Event host");
   const initials = event.host_name
     .split(" ")
     .filter(Boolean)
@@ -39,8 +40,8 @@ export default async function EventDetailPage({
 
   return (
     <section className="space-y-8">
-      <header className="grid gap-6 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:p-6">
-        <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-muted">
+      <header className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-[0_22px_60px_rgba(15,23,42,0.1)]">
+        <div className="relative aspect-[16/10] overflow-hidden bg-muted md:aspect-[21/9]">
           {event.photos.length ? (
             <div
               className="absolute inset-0 bg-cover bg-center"
@@ -48,12 +49,14 @@ export default async function EventDetailPage({
               aria-hidden="true"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.16),transparent_34%),radial-gradient(circle_at_80%_35%,rgba(249,115,22,0.14),transparent_28%),linear-gradient(135deg,#ffffff,#eef2f7)]">
-              <span className="text-6xl" aria-hidden="true">
+            <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(135deg,#fff7ed_0%,#ecfeff_48%,#fef9c3_100%)]">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.38)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,0.38)_1px,transparent_1px)] bg-[size:34px_34px]" aria-hidden="true" />
+              <span className="relative text-7xl drop-shadow-sm" aria-hidden="true">
                 {event.emoji || "M"}
               </span>
             </div>
           )}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0)_34%,rgba(0,0,0,0.7)_100%)]" aria-hidden="true" />
           <div className="absolute left-4 top-4">
             <Badge color="green" variant="dot" size="sm" className="bg-card/90 backdrop-blur">
               {event.category}
@@ -61,21 +64,27 @@ export default async function EventDetailPage({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-5 p-5 md:p-6">
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Back to discover
+          </Link>
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">
               {formatEventDateRange(event)}
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            <h1 className="max-w-4xl text-3xl font-semibold tracking-tight text-foreground md:text-5xl">
               {event.title}
             </h1>
             {event.excerpt ? (
-              <p className="text-base leading-7 text-muted-foreground">{event.excerpt}</p>
+              <p className="max-w-3xl text-base leading-7 text-muted-foreground">{event.excerpt}</p>
             ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <div className="inline-flex items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/60 px-3 py-1.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Location
               </span>
@@ -107,7 +116,7 @@ export default async function EventDetailPage({
         </div>
       </header>
 
-      <article className="prose prose-lg max-w-none rounded-lg border border-border/80 bg-card p-6 shadow-sm dark:prose-invert prose-headings:text-foreground prose-a:text-foreground">
+      <article className="prose prose-lg max-w-none rounded-lg border border-border/80 bg-card/95 p-6 shadow-sm dark:prose-invert prose-headings:text-foreground prose-a:text-foreground md:p-8">
         {event.content.trim() ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{event.content}</ReactMarkdown>
         ) : (

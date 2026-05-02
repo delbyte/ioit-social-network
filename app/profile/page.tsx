@@ -27,7 +27,9 @@ export default async function ProfilePage() {
     <ProfileClient
       profile={{
         name: profile?.display_name || user.email?.split("@")[0] || "User",
-        handle: profile?.handle || `@${user.email?.split("@")[0] || "user"}`,
+        handle: profile?.handle
+          ? `@${profile.handle.replace(/^@+/, "")}`
+          : `@${user.email?.split("@")[0] || "user"}`,
         bio: profile?.bio || "",
         about: profile?.about || "",
         avatarUrl: profile?.avatar_url || null,

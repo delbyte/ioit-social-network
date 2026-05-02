@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PencilSimple } from "@phosphor-icons/react";
+import { CalendarPlus, PencilSimple } from "@phosphor-icons/react";
 import { EventCard } from "@/components/events/event-card";
 import { useInterestState } from "@/components/providers/interest-provider";
 import type { EventPost } from "@/lib/events";
@@ -74,10 +74,11 @@ export function ProfileClient({
 
   return (
     <section className="space-y-8">
-      <header className="relative grid gap-5 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:grid-cols-[auto_1fr_auto] md:items-start md:p-6">
+      <header className="relative grid gap-5 overflow-hidden rounded-lg border border-border/80 bg-[linear-gradient(135deg,#f8fafc_0%,#fff7ed_48%,#ecfeff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] md:grid-cols-[auto_1fr_auto] md:items-start md:p-6">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#a855f7,#06b6d4,#22c55e)]" aria-hidden="true" />
         <Avatar className="mx-auto size-24 md:mx-0" aria-hidden="true">
           {profile.avatarUrl ? <AvatarImage src={profile.avatarUrl} alt="" /> : null}
-          <AvatarFallback className="text-3xl font-semibold text-foreground">
+          <AvatarFallback className="bg-white text-3xl font-semibold text-foreground shadow-sm">
             {initials || "U"}
           </AvatarFallback>
         </Avatar>
@@ -109,17 +110,20 @@ export function ProfileClient({
       </header>
 
       <section className={`grid ${statsColumns} gap-4`} aria-label="Profile stats">
-        <article className="rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+        <article className="overflow-hidden rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+          <div className="-mx-4 -mt-4 mb-4 h-1.5 bg-cyan-400" />
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Created</h2>
           <p className="mt-1 text-2xl font-bold tracking-tight">{createdEvents.length}</p>
         </article>
         {isOwner ? (
-          <article className="rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+          <article className="overflow-hidden rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+            <div className="-mx-4 -mt-4 mb-4 h-1.5 bg-pink-400" />
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Interested</h2>
             <p className="mt-1 text-2xl font-bold tracking-tight">{interestedIds.length}</p>
           </article>
         ) : null}
-        <article className="rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+        <article className="overflow-hidden rounded-lg border border-border/80 bg-card p-4 text-center shadow-sm">
+          <div className="-mx-4 -mt-4 mb-4 h-1.5 bg-amber-400" />
           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Focus</h2>
           <p className="mt-1 text-lg font-bold tracking-tight">Events</p>
         </article>
@@ -138,15 +142,16 @@ export function ProfileClient({
             {drafts.map((draft, index) => (
               <article
                 key={draft.id}
-                className="flex flex-col gap-3 rounded-lg border border-border/80 bg-card p-4 shadow-sm"
+                className="flex flex-col gap-3 overflow-hidden rounded-lg border border-border/80 bg-card p-4 shadow-sm"
               >
+                <div className="-mx-4 -mt-4 h-1.5 bg-[linear-gradient(90deg,#f97316,#06b6d4)]" />
                 <div className="space-y-1">
                   <h3 className="text-lg font-semibold text-foreground">
                     {draft.title || "Untitled event"}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {draftScheduleLabels[index] || "Schedule not set"}
-                    {draft.location ? ` · ${draft.location}` : ""}
+                    {draft.location ? ` - ${draft.location}` : ""}
                   </p>
                 </div>
                 <p className="line-clamp-2 text-sm text-muted-foreground">
@@ -174,8 +179,16 @@ export function ProfileClient({
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Created Events</h2>
         {createdEvents.length === 0 ? (
-          <div className="flex min-h-[180px] items-center justify-center rounded-lg border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">
+          <div className="flex min-h-[220px] flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-card/85 p-6 text-center text-sm text-muted-foreground shadow-sm">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-[linear-gradient(135deg,#fef3c7,#dbeafe)] text-foreground">
+              <CalendarPlus size={24} />
+            </div>
             <p>You have not created any events yet.</p>
+            {isOwner ? (
+              <Button asChild variant="primary">
+                <Link href="/events/new">Create event</Link>
+              </Button>
+            ) : null}
           </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

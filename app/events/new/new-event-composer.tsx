@@ -66,20 +66,57 @@ export function NewEventComposer() {
     eventDate !== "" &&
     eventTime !== "";
 
-  const imageHint = useMemo(
-    () =>
-      imageError
-        ? imageError
-        : "Optional image only. JPG, PNG, or WEBP. Maximum 2 MB. No videos.",
-    [imageError],
-  );
-
   const hasDraftContent = useMemo(
     () =>
       [title, excerpt, content, location, eventDate, eventTime].some(
         (value) => value.trim() !== "",
       ),
     [content, eventDate, eventTime, excerpt, location, title],
+  );
+
+  const validationErrors = useMemo(() => {
+    const errors: string[] = [];
+    const trimmedTitle = title.trim();
+    const trimmedExcerpt = excerpt.trim();
+    const trimmedContent = content.trim();
+    const trimmedLocation = location.trim();
+
+    if (trimmedTitle.length < 5) {
+      errors.push("Title must be at least 5 characters.");
+    }
+    if (trimmedTitle.length > 100) {
+      errors.push("Title must be 100 characters or fewer.");
+    }
+    if (trimmedExcerpt.length > 180) {
+      errors.push("Tagline must be 180 characters or fewer.");
+    }
+    if (trimmedContent.length < 20) {
+      errors.push("Description must be at least 20 characters.");
+    }
+    if (trimmedContent.length > 5000) {
+      errors.push("Description must be 5000 characters or fewer.");
+    }
+    if (trimmedLocation.length < 2) {
+      errors.push("Location must be at least 2 characters.");
+    }
+    if (!eventDate) {
+      errors.push("Pick an event date.");
+    }
+    if (!eventTime) {
+      errors.push("Pick an event time.");
+    }
+
+    return errors;
+  }, [content, eventDate, eventTime, excerpt, location, title]);
+
+  const showValidation = !canSubmit && hasDraftContent;
+
+  const imageHint = useMemo(
+    () =>
+      imageError
+        ? imageError
+        : "Optional image only. JPG, PNG, or WEBP. Maximum 2 MB. No videos.",
+    [imageError],
   );
 
   const previewSchedule = useMemo(() => {
@@ -100,35 +137,39 @@ export function NewEventComposer() {
   }
 
   useEffect(() => {
-    const drafts = readDrafts();
-    const resolvedDraft = draftParam
-      ? drafts.find((draft) => draft.id === draftParam)
-      : drafts[0];
+    const handle = window.setTimeout(() => {
+      const drafts = readDrafts();
+      const resolvedDraft = draftParam
+        ? drafts.find((draft) => draft.id === draftParam)
+        : drafts[0];
 
-    if (!resolvedDraft) {
+      if (!resolvedDraft) {
+        setDraftLoaded(true);
+        return;
+      }
+
+      setDraftId(resolvedDraft.id);
+      setEmoji(resolvedDraft.emoji || DEFAULT_EMOJI);
+      setTitle(resolvedDraft.title);
+      setExcerpt(resolvedDraft.excerpt);
+      setContent(resolvedDraft.content);
+      setLocation(resolvedDraft.location);
+      setCategory(resolvedDraft.category);
+      setEventDate(resolvedDraft.eventDate);
+      setEventTime(resolvedDraft.eventTime);
       setDraftLoaded(true);
-      return;
-    }
+    }, 0);
 
-    setDraftId(resolvedDraft.id);
-    setEmoji(resolvedDraft.emoji || DEFAULT_EMOJI);
-    setTitle(resolvedDraft.title);
-    setExcerpt(resolvedDraft.excerpt);
-    setContent(resolvedDraft.content);
-    setLocation(resolvedDraft.location);
-    setCategory(resolvedDraft.category);
-    setEventDate(resolvedDraft.eventDate);
-    setEventTime(resolvedDraft.eventTime);
-    setDraftLoaded(true);
+    return () => window.clearTimeout(handle);
   }, [draftParam]);
 
   useEffect(() => {
     if (!draftLoaded) return;
+    if (isSubmitting) return;
 
     if (!hasDraftContent) {
       if (draftId) {
         removeDraft(draftId);
-        setDraftId(null);
       }
       return;
     }
@@ -168,6 +209,7 @@ export function NewEventComposer() {
     eventTime,
     excerpt,
     hasDraftContent,
+    isSubmitting,
     location,
     title,
   ]);
@@ -300,10 +342,11 @@ export function NewEventComposer() {
 
   return (
     <section className="space-y-8">
-      <header className="flex flex-col justify-between gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm md:flex-row md:items-end">
+      <header className="relative overflow-hidden rounded-lg border border-border/80 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_48%,#ecfeff_100%)] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] md:p-6">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#f97316,#06b6d4,#22c55e)]" aria-hidden="true" />
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Create Event</h1>
-          <p className="text-sm leading-6 text-muted-foreground">
+          <p className="text-sm leading-6 text-foreground/70">
             Share the full plan, then publish it to the timeline.
           </p>
         </div>
@@ -321,7 +364,7 @@ export function NewEventComposer() {
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <form
           onSubmit={onSubmit}
-          className={`space-y-6 rounded-lg border border-border/80 bg-card p-5 shadow-sm ${mobileView === "preview" ? "hidden md:block" : "block"}`}
+          className={`space-y-6 rounded-lg border border-border/80 bg-card/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] ${mobileView === "preview" ? "hidden md:block" : "block"}`}
         >
           <div className="flex items-start gap-4">
             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
@@ -479,9 +522,19 @@ export function NewEventComposer() {
               Publish Event
             </Button>
           </div>
+          {showValidation ? (
+            <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+              <p className="font-medium">Finish the required fields:</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                {validationErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </form>
 
-        <aside className={`sticky top-24 space-y-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
+        <aside className={`sticky top-24 space-y-4 rounded-lg border border-border/80 bg-card/95 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] ${mobileView === "edit" ? "hidden md:block" : "block"}`}>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h2>
             <span className="text-2xl leading-none" aria-hidden="true">

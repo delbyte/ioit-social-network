@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/components/providers/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { MingleLogo } from "@/components/brand/mingle-logo";
 
 const navItems = [
   { href: "/", label: "Home", icon: House },
@@ -41,13 +42,10 @@ export function MainNav() {
 
   return (
     <>
-      <header className="sticky inset-x-0 top-0 z-50 hidden border-b border-border/70 bg-background/90 backdrop-blur-md md:block">
+      <header className="sticky inset-x-0 top-0 z-50 hidden border-b border-border/70 bg-background/80 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur-md md:block">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-foreground text-background">
-              M
-            </span>
-            <span>Mingle</span>
+          <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-normal text-foreground">
+            <MingleLogo />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -60,7 +58,7 @@ export function MainNav() {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={`flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-medium transition-colors ${
-                    active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                   }`}
                 >
                   <Icon size={16} weight={active ? "regular" : "light"} />
@@ -105,7 +103,7 @@ export function MainNav() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${
-                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-white/60 hover:text-foreground"
               }`}
             >
               <Icon size={19} weight={active ? "regular" : "light"} />
@@ -116,7 +114,7 @@ export function MainNav() {
 
         <Link
           href="/events/new"
-          className="mx-auto flex size-11 items-center justify-center rounded-xl bg-foreground text-background shadow-sm transition-opacity hover:opacity-90"
+          className="mx-auto flex size-11 items-center justify-center rounded-xl bg-neutral-950 text-white shadow-sm transition-opacity hover:opacity-90"
           aria-label="Create event"
         >
           <Plus size={21} weight="bold" />
@@ -131,7 +129,7 @@ export function MainNav() {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={`flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-lg text-[11px] font-medium transition-colors ${
-                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                active ? "bg-card text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-white/60 hover:text-foreground"
               }`}
             >
               <Icon size={19} weight={active ? "regular" : "light"} />

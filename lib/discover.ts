@@ -1,6 +1,6 @@
 import type { EventCategory, EventPost } from "@/lib/events";
 
-export type DiscoverSort = "date" | "interest" | "trending";
+export type DiscoverSort = "date" | "interest";
 
 export interface DiscoverFilters {
   sort: DiscoverSort;
@@ -24,12 +24,6 @@ export function applyDiscoverFilters(
     if (filters.sort === "date") {
       if (dateDelta !== 0) return dateDelta;
       if (interestDelta !== 0) return interestDelta;
-      return a.id.localeCompare(b.id);
-    }
-
-    if (filters.sort === "interest") {
-      if (interestDelta !== 0) return interestDelta;
-      if (dateDelta !== 0) return dateDelta;
       return a.id.localeCompare(b.id);
     }
 
